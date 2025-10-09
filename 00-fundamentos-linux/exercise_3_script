@@ -1,0 +1,16 @@
+#! /bin/bash
+
+$1
+
+mkdir foo
+cd foo
+mkdir dummy empty
+touch dummy/file{1..2}.txt
+if [ $1 != null ]; then
+    echo $1 > dummy/file1.txt
+    else
+    echo "Me encanta la bash" > dummy/file1.txt
+fi
+cp dummy/file1.txt dummy/file2.txt
+mv dummy/file2.txt empty/file2.txt
+
