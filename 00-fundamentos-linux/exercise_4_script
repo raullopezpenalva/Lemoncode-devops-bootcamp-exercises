@@ -7,7 +7,7 @@ result=$(grep -oi "$1" downloaded_file.html | wc -l)
 
 if (( $result > 0 )); then
     echo "La palabra '$1' aparece $result veces"
-    line=$(grep -inm1 devops downloaded_file.html | cut -d: -f1)
+    line=$(grep -inm1 "$1" downloaded_file.html | cut -d: -f1)
     echo "Aparece por primera vez en la línea $line"
 else
     echo "No se ha encontrado la palabra '$1'"

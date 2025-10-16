@@ -1,0 +1,22 @@
+#! /bin/bash
+
+url=$1
+word=$2
+
+curl -o downloaded_file.html $url 2>/dev/null
+
+result=$(grep -oi "$word" downloaded_file.html | wc -l)
+
+if (( $result > 0 )); then
+    if (( $result = 1)); then
+	echo "La palabra '$word' aparece solo 1 vez"
+	line=$(grep -inm1 "$word" downloaded_file.html | cut -d: -f1)
+	echo "Aparece únicamente en la línea $line"
+    else
+	echo "La palabra '$word' aparece $result veces"
+	line=$(grep -inm1 "$word" downloaded_file.html | cut -d: -f1)
+	echo "Aparece por primera vez en la línea $line"
+    fi
+else
+    echo "No se ha encontrado la palabra '$word'"
+fi
