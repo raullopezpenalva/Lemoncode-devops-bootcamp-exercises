@@ -4,13 +4,13 @@
 
 Aquí he creado una red con el nombre indicado para el challenge y de tipo driver. De forma automatica se establece el rango de subred y mascara.
 
-```docker
+```bash
 docker network create --driver bridge lemoncode-challenge
 ```
 
 ## 2- Creamos el volumen persistente para el MongoDB
 
-```docker
+```bash
 docker volume create some-mongoDB
 ```
 
@@ -26,8 +26,8 @@ Enlazo el volumen some-mongoDB que he creando anteriormente con la ruta /data/db
 
 Ordeno que se conecte en la red Docker "lemoncode-challenge".
 
-```docker
-docker run --name some-mongo -p 27017:27017 -v some-mongoDB:/data --network lemoncode-challenge -d mongo:noble
+```bash
+docker run --name some-mongo -p 27017:27017 -v some-mongoDB:/data/db --network lemoncode-challenge -d mongo:noble
 ```
 ## 4- Arrancar backend (node.js) en local
 

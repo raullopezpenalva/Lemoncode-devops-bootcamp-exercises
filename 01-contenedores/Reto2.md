@@ -2,7 +2,7 @@
 
 ## 1- Creación Dockerfile
 
-He creado un Dockerfile dentro del directorio raíz del repo de backend en Node.js
+He creado un [Dockerfile](./lemoncode-challenge/node-stack/backend/Dockerfile) dentro del directorio raíz del repo de backend en Node.js
 
 ```Dockerfile
 # Imagen base de Alpine con Node:20 pre instalado
@@ -27,10 +27,10 @@ CMD ["npm", "start"]
 
 ## 2- Creación de la imagen
 
-Ejecuto el comando docker build con el tag backend.node:DockerChallenge.
+Ejecuto el comando docker build con el tag topics-api:DockerChallenge.
 
 ```bash
-docker build --tag backend-node:DockerChallenge .
+docker build --tag topics-api:DockerChallenge .
 ```
 
 ## 3- Arrancar el contenedor con el backend
@@ -39,7 +39,7 @@ Descripción de los argumentos:
 
 **-d** -> para arrancar el contenedor sin que se quede en terminal la linea de logs del contenedor.
 
-**--name backend-node** -> especifico el nombre del contenedor.
+**--name topics-api** -> especifico el nombre del contenedor.
 
 **--network lemoncode-challenge** -> nombre de la red tipo bridge donde también está el contenedor de Mongo.
 
@@ -49,20 +49,20 @@ Descripción de los argumentos:
 
 **-e HOST=0.0.0.0** -> Especificamos a la app que pueda recibir peticiones de cualquier IP, po default tiene solo localhost.
 
-**backend-node:DockerChallenge** -> nombre de la imagen ha ejecutar.
+**topics-api:DockerChallenge** -> nombre de la imagen ha ejecutar.
 
 ```bash
 docker run -d \
---name backend-node \
+--name topics-api \
 --network lemoncode-challenge \
 -p 5000:5000 \
 -e DATABASE_URL=mongodb://some-mongo:27017 \
 -e HOST=0.0.0.0 \
-backend-node:DockerChallenge
+topics-api:DockerChallenge
 ```
 ## 4- Comprobación
 
-Ejecuto con REST client: GET GET http://localhost:5000/api/topics HTTP/1.1
+Ejecuto con REST client: GET http://localhost:5000/api/topics HTTP/1.1
 
 **Response:**
 ```JSON

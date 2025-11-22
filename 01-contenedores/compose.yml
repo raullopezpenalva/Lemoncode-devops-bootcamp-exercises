@@ -1,0 +1,63 @@
+# a partir de services: creas los servicios
+services:
+  # Definición del servicio de MongoDB
+  some-mongo:
+    image: mongo:noble
+    container_name: some-mongo
+    # Solo indico que el puerto 27017 está expuesto para otros servicios pero no está publico en el host, solo es accesible desde la red de docker
+    expose:
+      - "27017"
+    # Conexión a la red definida más abajo
+    networks:
+      - lemoncode-challenge
+    # Definición del volumen para persistencia de datos
+    volumes:
+      - some-mongoDB:/data/db
+
+ # Definición del servicio del Topics API (backend) 
+  topics-api:
+    # Uso la imagen que he creado en el reto anterior
+    image: topics-api:DockerChallenge
+    container_name: topics-api
+    # Solo indico que el puerto 5000 está expuesto para otros servicios pero no está publico en el host, solo es accesible desde la red de docker
+    expose:
+      - "5000"
+    # Variables de entorno desde archivo .env para el servicio del backend
+    env_file:
+      - ./lemoncode-challenge/node-stack/backend/.env
+    # Conexión a la red definida más abajo
+    networks:
+      - lemoncode-challenge
+    # Indico que este servicio depende de que el servicio some-mongo esté levantado
+    depends_on:
+      - some-mongo 
+  
+  # Definición del servicio del Topics Frontend
+  topics-frontend:
+    # Para demostrar que se puede construir la imagen desde el dockerfile en el propio compose sin necesidad de crearla antes manualmente
+    build:
+      # Ruta para definir la ruta en la que trabajar y nombre del dockerfile(podria ser otro nombre distinto a Dockerfile)
+      context: ./lemoncode-challenge/node-stack/frontend
+      dockerfile: Dockerfile
+    container_name: topics-frontend
+    # Mapeo del puerto 3000 del contenedor al puerto 3000 del host
+    ports:
+      - "3000:3000"
+    # Variables de entorno desde archivo .env para el servicio del frontend
+    env_file:
+      - ./lemoncode-challenge/node-stack/frontend/.env
+    # Conexión a la red definida más abajo
+    networks:
+      - lemoncode-challenge
+    # Indico que este servicio depende de que el servicio topics-api esté levantado
+    depends_on:
+      - topics-api
+
+# Definición de la red personalizada
+networks:
+  lemoncode-challenge:
+    driver: bridge
+
+# Definición de los volúmenes para persistencia de datos
+volumes:
+  some-mongoDB:
