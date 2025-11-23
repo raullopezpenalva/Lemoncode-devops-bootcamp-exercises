@@ -39,6 +39,8 @@ services:
       # Ruta para definir la ruta en la que trabajar y nombre del dockerfile(podria ser otro nombre distinto a Dockerfile)
       context: ./lemoncode-challenge/node-stack/frontend
       dockerfile: Dockerfile
+    # Especifico el nombre de la imagen que se va a crear
+    image: frontend-node:DockerChallenge
     container_name: topics-frontend
     # Mapeo del puerto 3000 del contenedor al puerto 3000 del host
     ports:
@@ -53,11 +55,12 @@ services:
     depends_on:
       - topics-api
 
-# Definición de la red personalizada
+# Definición de la red personalizada, ya está creada de los retos anteriores, por eso es external: true 
 networks:
   lemoncode-challenge:
-    driver: bridge
+    external: true
 
 # Definición de los volúmenes para persistencia de datos
 volumes:
   some-mongoDB:
+    external: true

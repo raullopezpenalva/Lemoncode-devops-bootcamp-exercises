@@ -29,11 +29,13 @@ CMD ["npm", "start"]
 
 ## 2- Creación de la imagen
 
-Ejecuto el comando docker build con el tag frontend-node:DockerChallenge
+Ejecuto el comando docker build con el tag `frontend-node:DockerChallenge` en directorio donde está el Dockerfile y el repositorio de node-frontend.
 
 ```bash
 docker build --tag frontend-node:DockerChallenge .
 ```
+
+**NOTA**: También hay un [.dockerignore](./lemoncode-challenge/node-stack/frontend/.dockerignore) para ignorar cosas innecesarias.
 
 ## 3- Arrancar el contenedor con el frontend
 
@@ -45,17 +47,17 @@ Descripción de los argumentos:
 
 **--network lemoncode-challenge** -> nombre de la red tipo bridge donde también está el contenedor de Mongo.
 
-**-p 3000:3000** -> publica el puerto 5000 en el host para poder acceder desde fuera del contenedor al puerto 5000 interno del contenedor.
+**-p 3000:3000** -> publica el puerto 3000 en el host para poder acceder desde fuera del contenedor al puerto 3000 interno del contenedor.
 
-**-e API_URI=http://topics-api:5000/api/topics** -> varible de entorno que especifica donde está el backend topics api.
+**--env-file .env** -> archivo [.env](./lemoncode-challenge/node-stack/frontend/.env) que está en el directorio de [frontend](./lemoncode-challenge/node-stack/frontend/), **NOTA IMPORTANTE: para que el comando tenga existo con esta sintaxis debes estar en el directorio donde se encuentra el arcivho `.env`, por el contrario no cogerá las variables de entorno, si no estas en el directorio correcto puedes usar ruta absoluta o relativa desde donde estés.**
 
-**frontend-node:DockerChallenge** -> nombre de la imagen ha ejecutar.
+**frontend-node:DockerChallenge** -> nombre de la imagen a ejecutar.
 
 ```bash
 docker run -d \
 --name topics-frontend \
 --network lemoncode-challenge \
 -p 3000:3000 \
--e API_URI=http://topics-api:5000/api/topics \
+--env-file .env \
 frontend-node:DockerChallenge
 ```

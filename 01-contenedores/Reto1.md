@@ -18,20 +18,20 @@ docker volume create some-mongoDB
 
 Ejecuto el comando para hacer pull de la imagen MongoDB oficial con el tag :noble (por similitud de que mi host es un Ubuntu noble, pero he visto que el tag :latest es el mismo que el noble para amd64).
 
-Pongo de nombre del contenedor some-mongo que es el que exige el challenge y ademas es el mismo que usan en la documentacion de la imagen oficial.
+Pongo de nombre del contenedor `some-mongo` que es el que exige el challenge y ademas es el mismo que usan en la documentacion de la imagen oficial.
 
-Expongo el puerto 27017 que es el por default del mongo y el que exige el challenge para así poder conectarse el backend que corre en el host local.
+Expongo el puerto `27017` que es el por default de mongo y el que exige el challenge para así poder conectarse el backend que corre en el host local.
 
-Enlazo el volumen some-mongoDB que he creando anteriormente con la ruta /data/db del contenedor.
+Enlazo el volumen `some-mongoDB` que he creando anteriormente con la ruta `/data/db` del contenedor.
 
-Ordeno que se conecte en la red Docker "lemoncode-challenge".
+Ordeno que se conecte en la red Docker `lemoncode-challenge`.
 
 ```bash
 docker run --name some-mongo -p 27017:27017 -v some-mongoDB:/data/db --network lemoncode-challenge -d mongo:noble
 ```
 ## 4- Arrancar backend (node.js) en local
 
-Voy a la carpeta donde estan el package.json del backend y ejecuto el comando:
+Voy a la carpeta donde estan el `package.json` del backend y ejecuto el comando:
 ```bash
 npm install
 ```
@@ -48,7 +48,7 @@ A continuacion muestro las pruebas realizadas con Rest client.
 ### 5.1 - GET 
 
 
-GET http://localhost:5000/api/topics HTTP/1.1
+`GET http://localhost:5000/api/topics HTTP/1.1`
 
 
 **Response:**
