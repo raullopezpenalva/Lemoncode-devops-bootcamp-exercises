@@ -2,15 +2,15 @@
 
 ## Introducción
 
-En este este directorio del repositorio podemos encontrar mi laboratorio del modulo de contenedores. Es un reto que se divide en 4 sub-retos en los que consiste en poder crear contenedores desde una imagen del repositiorio oficial de DockeHub pasando por crear tus propias imagenes para contenerizar los repos aportados para el laboratorio con un reto final de orquestar todo con `docker compose`.
+En este directorio del repositorio podemos encontrar mi laboratorio del modulo de contenedores. Es un reto que se divide en 4 sub-retos en los que consiste en poder crear contenedores desde una imagen del repositiorio oficial de DockeHub pasando por crear tus propias imagenes para contenerizar los repos aportados para el laboratorio con un reto final de orquestar todo con `docker compose`.
 
 ## Lemoncode challenge directory
 
-El directorio *lemoncode-challenge* es copiado del repositorio del Bootcamp DevOps para poder usar el codigo necesario para poder llevar a cabo el laboratorio.
+El directorio *lemoncode-challenge* es copiado del repositorio del Bootcamp DevOps para poder usar el codigo necesario y poder llevar a cabo el laboratorio.
 
 La app que tiene el directorio se compone de un frontend y un backend.
 
-El directorio tiene dos stacks propuestos para el backend, uno en Node.js y otro en .NET. Para esta entrega yo solamente he usado el repositorio Node.js.
+El directorio tiene dos stacks propuestos para el backend, uno en Node.js y otro en .NET. Para esta entrega solamente he usado el repositorio Node.js.
 
 Dentro del propio directorio hay archivos añadidos por mi para poder llevar a cabo el reto.
 
