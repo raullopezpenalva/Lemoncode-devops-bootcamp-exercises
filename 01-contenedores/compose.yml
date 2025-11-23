@@ -14,11 +14,11 @@ services:
     volumes:
       - some-mongoDB:/data/db
 
- # Definición del servicio del Topics API (backend) 
-  topics-api:
+ # Definición del servicio del Classes API (backend) 
+  classes-api:
     # Uso la imagen que he creado en el reto anterior
-    image: topics-api:DockerChallenge
-    container_name: topics-api
+    image: classes-api:DockerChallenge
+    container_name: classes-api
     # Solo indico que el puerto 5000 está expuesto para otros servicios pero no está publico en el host, solo es accesible desde la red de docker
     expose:
       - "5000"
@@ -32,8 +32,8 @@ services:
     depends_on:
       - some-mongo 
   
-  # Definición del servicio del Topics Frontend
-  topics-frontend:
+  # Definición del servicio del Classes Frontend
+  classes-frontend:
     # Para demostrar que se puede construir la imagen desde el dockerfile en el propio compose sin necesidad de crearla antes manualmente
     build:
       # Ruta para definir la ruta en la que trabajar y nombre del dockerfile(podria ser otro nombre distinto a Dockerfile)
@@ -41,7 +41,7 @@ services:
       dockerfile: Dockerfile
     # Especifico el nombre de la imagen que se va a crear
     image: frontend-node:DockerChallenge
-    container_name: topics-frontend
+    container_name: classes-frontend
     # Mapeo del puerto 3000 del contenedor al puerto 3000 del host
     ports:
       - "3000:3000"
@@ -51,16 +51,16 @@ services:
     # Conexión a la red definida más abajo
     networks:
       - lemoncode-challenge
-    # Indico que este servicio depende de que el servicio topics-api esté levantado
+    # Indico que este servicio depende de que el servicio classes-api esté levantado
     depends_on:
-      - topics-api
+      - classes-api
 
 # Definición de la red personalizada, ya está creada de los retos anteriores, por eso es external: true 
 networks:
   lemoncode-challenge:
     external: true
 
-# Definición de los volúmenes para persistencia de datos
+# Definición de los volúmenes para persistencia de datos, tambien ya está creado de los retos anteriores, por eso es external: true
 volumes:
   some-mongoDB:
     external: true
