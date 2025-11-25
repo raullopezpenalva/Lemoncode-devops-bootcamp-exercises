@@ -2,7 +2,7 @@
 
 ## 1- Comando para crear la Docker network para el challenge
 
-Aquí he creado una red con el nombre indicado para el challenge y de tipo driver. De forma automatica se establece el rango de subred y mascara.
+Aquí he creado una red con el nombre indicado para el challenge y de tipo bridge. De forma automatica se establece el rango de subred y mascara.
 
 ```bash
 docker network create --driver bridge lemoncode-challenge

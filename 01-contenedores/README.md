@@ -45,7 +45,7 @@ Los demás archivos que se piden están en:
 
 ### Reto 1 - Crear contenedor de MongoDB
 
-Este reto consiste en crear un contenedor con mongo y que el backend que se ejecuta el local pueda conectarse.
+Este reto consiste en crear un contenedor con mongo y que el backend que se ejecuta en local pueda conectarse.
 
 La entrega de este reto es este fichero [Reto1](Reto1.md)
 
