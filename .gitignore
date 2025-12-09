@@ -1,5 +1,8 @@
 01-contenedores/lemoncode-challenge/node-stack/backend/node_modules
 01-contenedores/lemoncode-challenge/dotnet-stack
 01-contenedores/lemoncode-challenge/node-stack/backend/.devcontainer
+02-orquestación/01-Ejercicio1/00-monolith-in-mem
+02-orquestación/02-Ejercicio2/01-monolith
+02-orquestación/03-Ejercicio3/02-distributed
 .vscode
 .DS_Store
