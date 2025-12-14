@@ -1,191 +1,302 @@
-# Reto 2: Contenerizacion del backend Node.js y conexion con MongoDB por red docker
+# Ejercicio 2: Monolito con persistencia de datos
 
-## 1- Creación Dockerfile
 
-He creado un [Dockerfile](./lemoncode-challenge/node-stack/backend/Dockerfile) dentro del directorio raíz del repo de backend en Node.js
+## Paso 1: Crear una capa de persistencia de datos
 
-```Dockerfile
-# Imagen base de Alpine con Node:20 pre instalado
-FROM node:20-alpine
+### 1- Creación del configMap de postgres
 
-# Establecer el directorio de trabajo dentro del contenedor
-WORKDIR /app
-
-# Copiar los archivos de dependencias y ejecutar npm install
-COPY package*.json ./
-RUN npm install
-
-# Copiar el resto de los archivos de la aplicación al contenedor
-COPY . .
-
-# Exponer el puerto en el que la aplicación escuchará
-EXPOSE 5000
-
-# Comando para iniciar la aplicación
-CMD ["npm", "start"]
-```
-
-## 2- Creación de la imagen
-
-Ejecuto el comando `docker build` con el tag `classes-api:DockerChallenge` en el directorio donde está el Dockerfile y el repositorio de node-backend.
+He creado un configMap con las variables de entorno necesarias para configurar el pod que corre postgres.
 
 ```bash
-docker build --tag classes-api:DockerChallenge .
+POSTGRES_DB=todos_db
+POSTGRES_USER=postgres
+POSTGRES_PASSWORD=postgres
 ```
-**NOTA IMPORTANTE**: He creado un archivo [.dockerignore](./lemoncode-challenge/node-stack/backend/.dockerignore) que cuando hace `COPY` en el `Dockerfile` ignora esos directorios/archivos y no los mete dentro del contenedor de forma innecesaria.
+[ConfigMag File](./postgres_files/configMap-ENV-postgres.yaml)
 
-## 3- Arrancar el contenedor con el backend
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+  labels:
+    db: postgres
+    app: todo-app
+data:
+  POSTGRES_DB: todos_db
+  POSTGRES_USER: postgres
+  POSTGRES_PASSWORD: postgres
+```
 
-Descripción de los argumentos:
+### 2- Creación del storageclass
 
-**-d** -> para arrancar el contenedor sin que se quede en terminal la linea de logs del contenedor.
+He creado un YAML para definir el storageclass para el volumen persistente que usará postgres. Minikube ya tiene un storageclass definido por defecto que es de tipo hostpath pero he creado este que es practicamente lo mismo que al default para poder entender la sintaxis de la deifinion de un storageclass.
 
-**--name classes-api** -> especifico el nombre del contenedor.
+[storageclass postgres file](./postgres_files/sc-postgres.yaml)
 
-**--network lemoncode-challenge** -> nombre de la red tipo bridge donde también está el contenedor de Mongo.
+```yaml
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: postgres-storageclass
+  labels:
+    db: postgres
+    app: todo-app
+provisioner: kubernetes.io/minikube-hostpath
+```
+### 3- Creación del volumen persistente
 
-**-p 5000:5000** -> publica el puerto 5000 en el host para poder acceder desde fuera del contenedor al puerto 5000 interno del contenedor.
+He creado un YAML para definir el volumen persistente para postgres. He de comentar que si se hace aprovisionamiento dinamico no hace falta definir el PV previamente. 
 
-**-e DATABASE_URL=mongodb://some-mongo:27017** -> varible de entorno que especifica donde conectarse a la base de datos, `some-mongo` es el nombre del contenedor de  mongo y como la red docker tiene su propio servicio DNS se traduce a la IP asignada al contendor de Mongo en la red docker.
+[Postgres PV File](./postgres_files/pv-postgres.yaml)
 
-**classes-api:DockerChallenge** -> nombre de la imagen a ejecutar.
+```yaml
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: postgres-pv
+  labels:
+    db: postgres
+    app: todo-app
+spec:
+  accessModes:
+    - ReadWriteOnce
+  capacity:
+    storage: 1Gi
+  storageClassName: postgres-storageclass
+  hostPath:
+    path: /mnt/data/postgres
+```
+### 4- Creación del Persistent Volumen Claim
+
+He creado un YAML que define el PVC para postgres usando el storageclass definido antes. Por consecuencia como el PV anterior tiene el mismo storageclass Kubernetes asignará el PVC con el PV anterior por correlación de caracteristicas y por que el PV está libre.
+
+[Postgres PVC File](./postgres_files/pvc-postgres.yaml)
+
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  labels:
+    db: postgres
+    app: todo-app
+spec:
+  resources:
+    requests:
+      storage: 1Gi
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: postgres-storageclass
+```
+
+### 5- Creación Cluster IP service para postgres
+
+He creado un YAML que define el service que se encarga de direccionar las peticiones a los pods de postgres. En este caso solo se hace un replica de postgres para no configurar el sharing para postgres.
+
+[Cluster IP service File](./postgres_files/svc-postgres.yaml)
+
+```yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  labels:
+    db: postgres
+    app: todo-app
+spec:
+  type: ClusterIP
+  selector:
+    db: postgres
+  ports:
+    - port: 5432
+      targetPort: 5432
+      protocol: TCP
+      name: postgres
+```
+
+### 6- Creación del StatefulSet
+
+Despues de haber creado todo lo anterior se crea el statefulSet donde crearemos los pods con estado para poder gestionar la persistencia de datos de estos pods. El statefulSet utiliza de forma directa o indirecta todos los objetos creados previamente. He usado la imagen de postgres:10.4 ya que el script de SQL está optimizado a esta versión.
+
+[StatefulSet File](./postgres_files/statefulSet-postgres.yaml)
+
+```yaml
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-statefulset
+  labels:
+    db: postgres
+spec:
+  serviceName: "postgres-service"
+  replicas: 1
+  selector:
+    matchLabels:
+      db: postgres
+  template:
+    metadata:
+      labels:
+        db: postgres
+    spec:
+      containers:
+      - name: postgres
+        image: postgres:10.4
+        ports:
+        - containerPort: 5432
+        envFrom:
+        - configMapRef:
+            name: postgres-config
+        volumeMounts:
+        - name: postgres-data
+          mountPath: /var/lib/postgresql/data
+      volumes:
+      - name: postgres-data
+        persistentVolumeClaim:
+          claimName: postgres-pvc
+```
+### 7- Cargar el script de SQL
+
+He cargado manualmente el script de `todos_db.sql`.
+
+### 8- Resultado y comprobaciones
+
+Aplico los YAMLs para crear el servicio postgres con el siguiente comando:
 
 ```bash
-docker run -d \
---name classes-api \
---network lemoncode-challenge \
--p 5000:5000 \
--e DATABASE_URL=mongodb://some-mongo:27017 \
-classes-api:DockerChallenge
+cd postgres_files
+kubectl apply -f .
 ```
-## 4- Comprobación
 
-Ejecuto con REST client: `GET {{host}}/api/classes`
+Output del comando:
+![Kubectl_apply_-f_.](./images/apply-postgres-output.png)
 
-**Response:**
-```
-HTTP/1.1 200 OK
-X-Powered-By: Express
-Access-Control-Allow-Origin: *
-Content-Type: application/json; charset=utf-8
-Content-Length: 2084
-ETag: W/"824-zZeuJS9gMLuiKc1iTjm2tTFArxM"
-Date: Sun, 23 Nov 2025 17:19:20 GMT
-Connection: close
+Observamos que existe el pod de postgres y running:
+![postgres_pod](./images/pod_postgres.png)
 
-[
-  {
-    "_id": "692322e5246f1a2728746baf",
-    "name": "Contenedores I",
-    "instructor": "Gisela Torres",
-    "startDate": "2025-10-17T18:00:00Z",
-    "endDate": "2025-10-17T20:00:00Z",
-    "duration": 2,
-    "level": "Beginner"
-  },
-  {
-    "_id": "69232338246f1a2728746bb0",
-    "name": "Contenedores II",
-    "instructor": "Gisela Torres",
-    "startDate": "2025-10-24T18:00:00Z",
-    "endDate": "2025-10-24T20:00:00Z",
-    "duration": 2,
-    "level": "Beginner"
-  },
-  {
-    "_id": "69232f59246f1a2728746bb1",
-    "name": "Contenedores III",
-    "instructor": "Gisela Torres",
-    "startDate": "2025-10-31T18:00:00Z",
-    "endDate": "2025-10-31T20:00:00Z",
-    "duration": 2,
-    "level": "Beginner"
-  },
-  {
-    "_id": "69232fa0246f1a2728746bb2",
-    "name": "Contenedores IV",
-    "instructor": "Gisela Torres",
-    "startDate": "2025-11-07T18:00:00Z",
-    "endDate": "2025-11-07T20:00:00Z",
-    "duration": 2,
-    "level": "Beginner"
-  },
-  {
-    "_id": "69233027246f1a2728746bb3",
-    "name": "Contenedores V",
-    "instructor": "Gisela Torres",
-    "startDate": "2025-11-14T18:00:00Z",
-    "endDate": "2025-11-14T20:00:00Z",
-    "duration": 2,
-    "level": "Beginner"
-  },
-  {
-    "_id": "6923306e246f1a2728746bb4",
-    "name": "Contenedores VI",
-    "instructor": "Gisela Torres",
-    "startDate": "2025-11-21T18:00:00Z",
-    "endDate": "2025-11-21T20:00:00Z",
-    "duration": 2,
-    "level": "Beginner"
-  },
-  {
-    "_id": "6923375c246f1a2728746bb5",
-    "name": "Azure Web Services I",
-    "instructor": "Gisela Torres",
-    "startDate": "2026-02-20T18:00:00Z",
-    "endDate": "2026-02-20T20:00:00Z",
-    "duration": 2,
-    "level": "Beginner"
-  },
-  {
-    "_id": "692337a5246f1a2728746bb6",
-    "name": "Azure Web Services II",
-    "instructor": "Gisela Torres",
-    "startDate": "2026-02-27T18:00:00Z",
-    "endDate": "2026-02-27T20:00:00Z",
-    "duration": 2,
-    "level": "Beginner"
-  },
-  {
-    "_id": "69233807246f1a2728746bb7",
-    "name": "Kubernetes AKS",
-    "instructor": "Gisela Torres",
-    "startDate": "2026-03-13T18:00:00Z",
-    "endDate": "2026-03-13T20:00:00Z",
-    "duration": 2,
-    "level": "Beginner"
-  },
-  {
-    "_id": "692338ed246f1a2728746bb8",
-    "name": "SESIÓN IA I",
-    "instructor": "Gisela Torres",
-    "startDate": "2026-04-17T18:00:00Z",
-    "endDate": "2026-04-17T20:00:00Z",
-    "duration": 2,
-    "level": "Beginner"
-  },
-  {
-    "_id": "69233916246f1a2728746bb9",
-    "name": "SESIÓN IA II",
-    "instructor": "Gisela Torres",
-    "startDate": "2026-04-24T18:00:00Z",
-    "endDate": "2026-04-24T20:00:00Z",
-    "duration": 2,
-    "level": "Beginner"
-  }
-]
-```
-Podemos comprobar que funciona el contenedor con la imagen creada.
+Storageclass, PV y PVC creados y funcionando:
+![sc-pv-pvc-postgres](./images/sc-pv-pvc-postgres.png)
 
-Que el contenedor ha mapeado bien el puerto 5000 en el host para poder acceder desde el host o desde LAN. 
+Compruebo que se ha creado el servico y ha cogido de endpoint en pod de postgres:
+![svc-IP](./images/svc-IP-postgres.png)
 
-Que ha aplicado correctamente las variables de entorno porque el backend ha comunicado correctamente con el contenedor de Mongo por la red Bridge usando el nobre de dominio "some-mongo".
+Podemos observar (amarillo) en el describe del pod que ha montado el correctamente el PVC en el directorio correcto
+![postgres-pod-describe](./images/postgres-pod-describe.png)
 
-Tambien utilizo el comando `docker logs` para poder ver los logs del contenedor.
+Comprobamos que el pod a cargado correctamente las variables de entorno desde el configmap.
+![postgres-env](./images/postgres-env.png)
+
+Comprobamos que se ha cargado bien el script de SQL.
+
+![SQL_script](./images/script_SQL.png)
+
+## 2- Crear todo-app
+
+### 1- Creacion ConfigMap
+
+He creado un configMap con la variables de entorno para `todo-app`.
 
 ```bash
-docker logs classes-api
+NODE_ENV=production
+PORT=3000
+DB_HOST=postgres-service
+DB_PORT=5432
+DB_USER=postgres
+DB_PASSWORD=postgres
+DB_NAME=todos_db
+DB_VERSION=10.4
 ```
-Se puede observar en los logs que se conecta a mongo por la red docker correctamente
+[ConfigMap File](./todo_app_files/cgm-todo-app.yaml)
 
-![logs](./images/comprobacion-reto2.png)
+```YAML
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: todo-app-config
+  labels:
+    app: todo-app
+data:
+  NODE_ENV: "production"
+  PORT: "3000"
+  DB_HOST: "postgres-service"
+  DB_PORT: "5432"
+  DB_USER: "postgres"
+  DB_PASSWORD: "postgres"
+  DB_NAME: "todos_db"
+  DB_VERSION: "10.4"
+```
+### 2- Creacion del service
+
+He creado un servicio `LoadBalancer` para poder usar el tunel y conectarme a todo-app.
+
+```YAML
+apiVersion: v1
+kind: Service
+metadata:
+  name: todo-app-service
+  labels:
+    app: todo-app
+spec:
+  selector:
+    app: todo-app
+  ports:
+    - protocol: TCP
+      port: 3000
+      targetPort: 3000
+  type: LoadBalancer
+  ```
+
+  ### 3- Creacion del deploy
+
+  He creado un deploy donde especifico los pods para todo app.
+
+  ```YAML
+  apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-app-deployment
+  labels:
+    app: todo-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: todo-app
+  template:
+    metadata:
+      labels:
+        app: todo-app
+    spec:
+      containers:
+        - name: todo-app-container
+          image: lemoncodersbc/lc-todo-monolith-db:v5-2024
+          ports:
+            - containerPort: 3000
+          envFrom:
+            - configMapRef:
+                name: todo-app-config
+```
+### 4- Aplico los files
+
+```bash
+cd todo_app_files
+kubectl apply -f .
+```
+output comando
+![ouput comando](./images/apply-todoapp-output.png)
+
+## 3- Entrar a todo app
+
+Ejecuto el comando
+```bash
+minikube tunnel
+```
+Output:
+![output_tunnel](./images/output_minikube_tunnel.png)
+
+Entro a `http://10.99.23.110:3000/` y puedo acceder a todo app. Registro tres entradas y parece ser que funciona.
+![web_todoapp](./images/Web-screenshot.png)
+
+Para comprobar que a registrado en la base de datos, entro por bash al pod de postgres y verifico las entradas.
+![db_check](./images/db-check.png)

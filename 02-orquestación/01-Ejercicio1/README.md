@@ -3,9 +3,9 @@
 ## 1- ConfigMap para meter variables de entorno a los pods
 
 He creado un archivo YAML para crear un ConfigMap con las variables de entorno para todo-app del ejercicio. Las variables de entorno son las siguientes:
-```env
-ENV_NODE= production
-PORT= 3000
+```bash
+ENV_NODE=production
+PORT=3000
 ```
 
 [ConfigMag File](cgm-todo-app.yaml)
