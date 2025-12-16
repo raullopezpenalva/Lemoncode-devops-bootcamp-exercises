@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: todo-front
+  labels:
+    app: todo-front
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: todo-front
+  template:
+    metadata:
+      labels:
+        app: todo-front
+    spec:
+      imagePullSecrets:
+      - name: myghcr-secret
+      containers:
+      - name: todo-front
+        image: ghcr.io/raullopezpenalva/todo-front:latest
+        ports:
+        - containerPort: 80
+        envFrom: 
+        - configMapRef:
+            name: todo-front-config
