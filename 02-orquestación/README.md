@@ -8,6 +8,7 @@ En este directorio del repositorio podemos encontrar mi laboratorio del modulo d
 ## Estructura del repositorio
 
 Principalmente la entrega se centra en los archivos denominados `README.md` dentro del directorio de cada ejercicio. Son archivos Markdown donde redacto todo el proceso y tiene los enlaces a los archivos que se piden por ejercicio.
+
 ```markdown
 02-orquestación/
 ├── 01-Ejercicio1/
@@ -17,7 +18,31 @@ Principalmente la entrega se centra en los archivos denominados `README.md` dent
 │   ├── cgm-todo-app.yaml
 │   └── images/
 ├── 02-Ejercicio2/
-├── 04-Ejercicio3/
+│   ├── README.md
+│   ├── postgres-files/
+│   │   ├── configMap-ENV-postgres.yaml
+│   │   ├── pv-postgres.yaml
+│   │   ├── pvc-postgres.yaml
+│   │   ├── sc-postgres.yaml
+│   │   ├── statefulSet-postgres.yaml
+│   │   └── svc-postgres.yaml
+│   ├── todo-app-files/
+│   │   ├── cgm-todo-app.yaml
+│   │   ├── deploy-todo-app.yaml
+│   │   └── svc-todo-app.yaml
+│   └── images/
+├── 03-Ejercicio3/
+│   ├── README.md
+│   ├── ingress-files/
+│   │   └── ingress-todo-app.yaml
+│   ├── todo-api-files/
+│   │   ├── configMap-todo-api.yaml
+│   │   ├── deploy-todo-api.yaml
+│   │   └── svc-todo-api.yaml
+│   ├── todo-front-files/
+│   │   ├── deploy-todo-front.yaml
+│   │   └── svc-todo-front.yaml
+│   └── images/
 └── README.md
 ```
 ## Entrega de los ejercicios
