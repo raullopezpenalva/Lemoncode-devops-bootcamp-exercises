@@ -30,7 +30,7 @@ data:
 
 ### 2- Creación del storageclass
 
-He creado un YAML para definir el storageclass para el volumen persistente que usará postgres. Minikube ya tiene un storageclass definido por defecto que es de tipo hostpath pero he creado este que es practicamente lo mismo que al default para poder entender la sintaxis de la deifinion de un storageclass.
+He creado un YAML para definir el storageclass para el volumen persistente que usará postgres. Minikube ya tiene un storageclass definido por defecto que es de tipo hostpath pero he creado este que es practicamente lo mismo que el default para poder entender la sintaxis de la definción de un storageclass.
 
 [storageclass postgres file](./postgres_files/sc-postgres.yaml)
 
